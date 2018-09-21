@@ -102,7 +102,8 @@ void MYWORD::findWord(QString str)
     for (int i=0;i < listFiles.count();i++)
     {
           //if(listFiles[i].split('/').last().split('.').last() == "pdf")
-            //openPDFFind(str,listFiles[i]);
+              //openWordFind(str,listFiles[i]);
+           // openPDFFind(str,listFiles[i]);
 
           openWordFind(str,listFiles[i]);
     }

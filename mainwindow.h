@@ -23,7 +23,10 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    QFileDialog* dialog;
+
     MYWORD* word;
+    QAxWidget* Widget;
 
 signals:
     void scanDir(QString str,QDir dir);
