@@ -34,11 +34,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 
-//    QString str = "\"При проведении аудита продажи готовой продукции используются процедуры\"";
+//   QString str = "\"контроль, проводимый по решению государственных органов\"";
 
 
 //    Widget->setControl(QString::fromUtf8("{8856F961-340A-11D0-A96B-00C04FD705A2}"));
-//    Widget->dynamicCall("Navigate(const QString&)", QString("D:\\Work\\ПРОТОКОЛЫ\\Аудит\\Protokol_po_tiestu_[Itoghovyi_tiest._Audit_i_kontrol'._2017_Dvorietskaia_]_na_10_12_2017(1).pdf#navpanes=1=OpenActions&search="+str+"&toolbar=0"));
+//    Widget->dynamicCall("Navigate(const QString&)", QString("D:\\Work\\ПРОТОКОЛЫ\\Аудит\\Protokol_po_tiestu_[Itoghovyi_tiest._Audit_i_kontrol'._2017_Dvorietskaia_]_na_10_12_2017(1).pdf#navpanes=1=OpenActions&toolbar=0&search="+str+""));//
 
 
 //    Widget->show();
