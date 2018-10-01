@@ -6,7 +6,7 @@
 
 QT       += core gui widgets axcontainer
 
-TARGET = Sany_findWord
+TARGET = FWD
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
@@ -39,4 +39,10 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
+RESOURCES += \
+    res.qrc
 
+
+
+# Загрузка иконки
+RC_ICONS += loupe_78347.ico

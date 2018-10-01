@@ -31,6 +31,7 @@ public:
     ////
     QStringList listFiles;
     QList<QStringList> listPositionFindWord;
+    QList<QAxObject*> listWordApplication;
 
     ///
 
@@ -171,6 +172,8 @@ signals:
     ///////////
     void scanning(QString,int,int);
 
+    void findWordFinish();
+
 public slots:
     void process_start();
 
@@ -239,6 +242,8 @@ public slots:
     void findWord(QString str);
     void openWordFind(QString str,QString file);
     void openPDFFind(QString str,QString file);
+
+    void closeAllWord();
 
 };
 

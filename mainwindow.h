@@ -28,14 +28,22 @@ public:
     MYWORD* word;
     QAxWidget* Widget;
 
+    QString def;
+
 signals:
     void scanDir(QString str,QDir dir);
+
+    void closeAllWord();
 
 private slots:
     void on_pushButton_clicked();
     void on_scanningList(QString data,int i,int N);
 
     void on_pushButton_2_clicked();
+
+    void findWordFinish();
+
+    void on_pushButton_3_clicked();
 
 private:
     Ui::MainWindow *ui;

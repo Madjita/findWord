@@ -45,7 +45,7 @@ MYWORD::~MYWORD()
 void MYWORD::scanDir(QDir dir)
 {
     QStringList filters;
-    filters << "*.docx"<< "*.doc" << "*.pdf";
+    filters << "*.docx"<< "*.doc" ;//<< "*.pdf";
 
     dir.setNameFilters(filters);
     dir.setFilter(QDir::Files | QDir::NoDotAndDotDot | QDir::NoSymLinks);
@@ -85,7 +85,6 @@ void MYWORD::scanDirWork(QString str,QDir dir)
 {
     scanDir(dir);
     emit scanning("",0,1);
-
     findWord(str);
 }
 
@@ -98,6 +97,7 @@ void MYWORD::findWord(QString str)
     qDebug() << "СТАРТ";
 
     listPositionFindWord.clear();
+    listWordApplication.clear();
 
     for (int i=0;i < listFiles.count();i++)
     {
@@ -105,10 +105,13 @@ void MYWORD::findWord(QString str)
               //openWordFind(str,listFiles[i]);
            // openPDFFind(str,listFiles[i]);
 
+          emit scanning("Поиск... :\t "+listFiles[i].split('/').last(),i,listFiles.size());
           openWordFind(str,listFiles[i]);
     }
 
-     qDebug() << "Финиш";
+    emit scanning("",0,1);
+    emit findWordFinish();
+    qDebug() << "Финиш";
 
 }
 
@@ -208,18 +211,17 @@ void MYWORD::openWordFind(QString str, QString file)
 
     if(countFindWord > 0)
     {
+        listWordApplication.append(WordApplication);
         listPositionFindWord.append(listFindWord);
     }
     else
     {
         WordApplication->dynamicCall("Quit (void)");
+        delete WordApplication;
     }
 
-    if(stateViewWord == false)
-        WordApplication->dynamicCall("Quit (void)");
-
-    delete WordApplication;
-
+//    if(stateViewWord == false)
+//        WordApplication->dynamicCall("Quit (void)");
 
 }
 
@@ -250,6 +252,26 @@ void MYWORD::openPDFFind(QString str, QString file)
     //    int mNumberOfPages = content->dynamicCall("Information(wdNumberOfPagesInDocument)").toInt();
 
 
+
+}
+
+void MYWORD::closeAllWord()
+{
+    int N = listWordApplication.count();
+
+    if(N > 0)
+    {
+        for(int i=0; i < N;i++)
+        {
+          // listWordApplication[i]->querySubObject("ActiveDocument()")->querySubObject("Close(&QString),");
+
+           listWordApplication[i]->querySubObject("ActiveDocument()")->dynamicCall("Close (boolean)", false);
+           listWordApplication[i]->dynamicCall("Quit (void)");
+           delete listWordApplication[i];
+        }
+    }
+
+    listWordApplication.clear();
 
 }
 
