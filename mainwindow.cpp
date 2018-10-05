@@ -15,11 +15,11 @@ MainWindow::MainWindow(QWidget *parent) :
     dialog->setFileMode(QFileDialog::Directory);
 
     word = new MYWORD();
-
     connect(this,&MainWindow::scanDir,word,&MYWORD::scanDirWork,Qt::QueuedConnection);
     connect(word,&MYWORD::scanning,this,&MainWindow::on_scanningList);
     connect(word,&MYWORD::findWordFinish,this,&MainWindow::findWordFinish);
     connect(this,&MainWindow::closeAllWord,word,&MYWORD::closeAllWord,Qt::QueuedConnection);
+    connect(this,&MainWindow::stopFind,word,&MYWORD::stopFind,Qt::QueuedConnection);
 
     qRegisterMetaType<QDir>("QDir");
 
@@ -70,6 +70,7 @@ void MainWindow::on_pushButton_clicked()
     ui->pushButton->setEnabled(false);
     ui->pushButton_2->setEnabled(false);
     ui->pushButton_3->setEnabled(false);
+    ui->pushButton_4->setEnabled(true);
 }
 
 void MainWindow::on_scanningList(QString data, int i, int N)
@@ -99,10 +100,23 @@ void MainWindow::on_pushButton_2_clicked()
 
 void MainWindow::findWordFinish()
 {
+    word->is_closeFind = false;
 
     ui->pushButton->setEnabled(true);
     ui->pushButton_2->setEnabled(true);
-    ui->pushButton_3->setEnabled(true);
+
+    qDebug() << word->listWordApplication.count() ;
+
+    if(word->listWordApplication.count() > 0)
+    {
+        ui->pushButton_3->setEnabled(true);
+    }
+    else
+    {
+        ui->pushButton_3->setEnabled(false);
+    }
+
+    ui->pushButton_4->setEnabled(false);
     ui->statusBar->showMessage("Финиш");
 
     ui->textEdit->setText("");
@@ -113,4 +127,40 @@ void MainWindow::on_pushButton_3_clicked()
 {
     emit closeAllWord();
     ui->pushButton_3->setEnabled(false);
+}
+
+void MainWindow::on_pushButton_4_clicked()
+{
+    if(ui->pushButton_4->text() == "Остановить поиск")
+    {
+        word->is_waiting = true;
+        ui->pushButton_4->setText("Продолжить поиск");
+    }
+    else
+    {
+
+
+        QMessageBox msgBox;
+        msgBox.setInformativeText("Хотите продолжить поиск?");
+        msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+        msgBox.setDefaultButton(QMessageBox::Ok);
+        int ret = msgBox.exec();
+
+        switch (ret) {
+           case QMessageBox::Ok:
+               word->is_waiting = false;
+               word->sem->release();
+               break;
+           case QMessageBox::Cancel:
+               word->sem->release();
+               word->is_closeFind = true;
+               word->is_waiting = false;
+               ui->pushButton_3->setEnabled(true);
+               emit closeAllWord();
+               break;
+         }
+
+        ui->pushButton_4->setText("Остановить поиск");
+
+    }
 }

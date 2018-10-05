@@ -20,6 +20,8 @@
 
 #include <QAxWidget>
 
+#include <QSemaphore>
+
 class MYWORD : public QObject
 {
     Q_OBJECT
@@ -27,6 +29,10 @@ public:
    explicit MYWORD(QObject *parent = nullptr);
 
     ~MYWORD();
+
+    bool is_waiting;
+    bool is_closeFind;
+    QSemaphore* sem;
 
     ////
     QStringList listFiles;
@@ -244,6 +250,8 @@ public slots:
     void openPDFFind(QString str,QString file);
 
     void closeAllWord();
+    void stopFind();
+    void catchException(int, const QString&, const QString&, const QString&);
 
 };
 

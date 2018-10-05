@@ -35,6 +35,8 @@ signals:
 
     void closeAllWord();
 
+    void stopFind();
+
 private slots:
     void on_pushButton_clicked();
     void on_scanningList(QString data,int i,int N);
@@ -44,6 +46,8 @@ private slots:
     void findWordFinish();
 
     void on_pushButton_3_clicked();
+
+    void on_pushButton_4_clicked();
 
 private:
     Ui::MainWindow *ui;

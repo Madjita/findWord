@@ -101,12 +101,18 @@ void MYWORD::findWord(QString str)
 
     for (int i=0;i < listFiles.count();i++)
     {
-          //if(listFiles[i].split('/').last().split('.').last() == "pdf")
-              //openWordFind(str,listFiles[i]);
-           // openPDFFind(str,listFiles[i]);
+        //if(listFiles[i].split('/').last().split('.').last() == "pdf")
+        //openWordFind(str,listFiles[i]);
+        // openPDFFind(str,listFiles[i]);
 
-          emit scanning("Поиск... :\t "+listFiles[i].split('/').last(),i,listFiles.size());
-          openWordFind(str,listFiles[i]);
+        if(is_closeFind)
+        {
+            break;
+        }
+
+
+        emit scanning("Поиск... :\t "+listFiles[i].split('/').last(),i,listFiles.size());
+        openWordFind(str,listFiles[i]);
     }
 
     emit scanning("",0,1);
@@ -114,6 +120,7 @@ void MYWORD::findWord(QString str)
     qDebug() << "Финиш";
 
 }
+
 
 
 void MYWORD::openWordFind(QString str, QString file)
@@ -124,32 +131,6 @@ void MYWORD::openWordFind(QString str, QString file)
 
     QFile File(file);
     File.setPermissions(File.permissions() | QFile::WriteOwner | QFile::WriteUser | QFile::WriteGroup | QFile::WriteOther);
-
-
-
-
-
-    QAxObject* WordApplication = new QAxObject("Word.Application"); // Создаю интерфейс к MSWord
-
-    QAxObject* WordDocuments = WordApplication->querySubObject("Documents()" ); // Получаю интерфейсы к его подобъекту "коллекция открытых документов":
-
-    QAxObject *newDocument = WordDocuments->querySubObject("Add(QVariant)", QVariant(file));
-
-   // WordDocuments->querySubObject( "Open(%T)",file);
-
-    WordApplication->setProperty("Visible", 1);
-
-
-    QAxObject* ActiveDocument = WordApplication->querySubObject("ActiveDocument()");
-    //    QAxObject* content = ActiveDocument->querySubObject("Content");
-    //    int mNumberOfPages = content->dynamicCall("Information(wdNumberOfPagesInDocument)").toInt();
-
-
-    QAxObject* selection = WordApplication->querySubObject("Selection()");
-    //selection->dynamicCall("HomeKey(wdStory)");
-
-    QAxObject* selectionFind = selection->querySubObject("Find");
-    //selectionFind->dynamicCall("ClearFormatting()");
 
 
     QList<QVariant> list2;
@@ -170,20 +151,88 @@ void MYWORD::openWordFind(QString str, QString file)
     list2.operator << (QVariant("0"));
 
 
-    //qDebug () << "mNumberOfPages = " << mNumberOfPages;
-
-    qDebug () << "str = " << str;
-
-
-
 
     bool find = true;
     int countFindWord =0;
 
     QStringList listFindWord;
 
+
+    QAxObject* WordApplication = new QAxObject("Word.Application"); // Создаю интерфейс к MSWord
+
+    QAxObject* WordDocuments = WordApplication->querySubObject("Documents()" ); // Получаю интерфейсы к его подобъекту "коллекция открытых документов":
+
+    connect(
+                WordApplication,
+                SIGNAL(exception(int, const QString &, const QString &, const QString &)),
+                this,
+                SLOT(catchException(int, const QString &, const QString &, const QString &)));
+
+    QAxObject *newDocument = WordDocuments->querySubObject("Add(QVariant)", QVariant(file));
+
+    if(newDocument == nullptr)
+    {
+        qDebug() << "ERROR";
+        WordApplication->dynamicCall("Quit (void)");
+        delete WordApplication;
+        return;
+    }
+
+
+    WordApplication->setProperty("Visible", 1);
+
+
+    QAxObject* ActiveDocument = WordApplication->querySubObject("ActiveDocument()");
+    //    QAxObject* content = ActiveDocument->querySubObject("Content");
+    //    int mNumberOfPages = content->dynamicCall("Information(wdNumberOfPagesInDocument)").toInt();
+
+
+    QAxObject* selection = WordApplication->querySubObject("Selection()");
+    //selection->dynamicCall("HomeKey(wdStory)");
+
+    connect(
+                WordApplication,
+                SIGNAL(exception(int, const QString &, const QString &, const QString &)),
+                this,
+                SLOT(catchException(int, const QString &, const QString &, const QString &)));
+
+    if(newDocument == nullptr)
+    {
+        qDebug() << "ERROR";
+        WordApplication->dynamicCall("Quit (void)");
+        delete WordApplication;
+        return;
+    }
+
+    QAxObject* selectionFind = selection->querySubObject("Find");
+
+
+
+
+    //selectionFind->dynamicCall("ClearFormatting()");
+
+
+
+
+
+
+    //qDebug () << "mNumberOfPages = " << mNumberOfPages;
+
+    qDebug () << "str = " << str;
+
+
     while(find)
     {
+
+        if(is_waiting)
+        {
+            sem->acquire();
+        }
+
+        if(is_closeFind)
+        {
+            break;
+        }
 
         find = selectionFind->dynamicCall("Execute(const QVariant&,const QVariant&,"
                                           "const QVariant&,const QVariant&,"
@@ -207,6 +256,7 @@ void MYWORD::openWordFind(QString str, QString file)
 
     }
 
+
     qDebug() << countFindWord << "  ; " << listFindWord.count();
 
     if(countFindWord > 0)
@@ -216,12 +266,18 @@ void MYWORD::openWordFind(QString str, QString file)
     }
     else
     {
-        WordApplication->dynamicCall("Quit (void)");
+        auto ex =  WordApplication->dynamicCall("Quit (void)");
+
+        qDebug() << ex;
+
         delete WordApplication;
     }
 
-//    if(stateViewWord == false)
-//        WordApplication->dynamicCall("Quit (void)");
+    //    if(stateViewWord == false)
+    //        WordApplication->dynamicCall("Quit (void)");
+
+
+    return;
 
 }
 
@@ -233,21 +289,21 @@ void MYWORD::openPDFFind(QString str, QString file)
 
     pdf->dynamicCall("Loadfile(%T)",file);
 
-  //  QAxObject* pdf = new QAxObject("PDFCreator.clsPDFCreator"); // Создаю интерфейс к PDF
+    //  QAxObject* pdf = new QAxObject("PDFCreator.clsPDFCreator"); // Создаю интерфейс к PDF
 
 
     //QAxObject* pdf = new QAxObject("Adobe PDF Reader"); // Создаю интерфейс к MSWord
 
-  //  QAxObject* WordDocuments = WordApplication->querySubObject("Documents()" ); // Получаю интерфейсы к его подобъекту "коллекция открытых документов":
+    //  QAxObject* WordDocuments = WordApplication->querySubObject("Documents()" ); // Получаю интерфейсы к его подобъекту "коллекция открытых документов":
 
-   // QAxObject *newDocument = WordDocuments->querySubObject("Add(QVariant)", QVariant(file));
+    // QAxObject *newDocument = WordDocuments->querySubObject("Add(QVariant)", QVariant(file));
 
-   // pdf->querySubObject( "Loadfile(%T)",file);
+    // pdf->querySubObject( "Loadfile(%T)",file);
 
-   pdf->setProperty("Visible", 1);
+    pdf->setProperty("Visible", 1);
 
 
-   // QAxObject* ActiveDocument = WordApplication->querySubObject("ActiveDocument()");
+    // QAxObject* ActiveDocument = WordApplication->querySubObject("ActiveDocument()");
     //    QAxObject* content = ActiveDocument->querySubObject("Content");
     //    int mNumberOfPages = content->dynamicCall("Information(wdNumberOfPagesInDocument)").toInt();
 
@@ -263,16 +319,39 @@ void MYWORD::closeAllWord()
     {
         for(int i=0; i < N;i++)
         {
-          // listWordApplication[i]->querySubObject("ActiveDocument()")->querySubObject("Close(&QString),");
 
-           listWordApplication[i]->querySubObject("ActiveDocument()")->dynamicCall("Close (boolean)", false);
-           listWordApplication[i]->dynamicCall("Quit (void)");
-           delete listWordApplication[i];
+            emit scanning("Закрытие...",i,listWordApplication.count());
+
+            listWordApplication[i]->querySubObject("ActiveDocument()")->dynamicCall("Close (boolean)", false);
+            listWordApplication[i]->dynamicCall("Quit (void)");
+            delete listWordApplication[i];
         }
     }
 
     listWordApplication.clear();
+    emit scanning("",0,1);
+    emit findWordFinish();
 
+}
+
+void MYWORD::stopFind()
+{
+    qDebug() << "sem->available() = " << sem->available();
+    is_waiting = true;
+    qDebug() << "sem->available() = " << sem->available();
+}
+
+void MYWORD::catchException(int id, const QString &a, const QString &b, const QString &c)
+{
+    qDebug() << id;
+    qDebug() << a;
+    qDebug() << b;
+    qDebug() << c;
+
+    if(b == "This command is not available because no document is open.")
+    {
+
+    }
 }
 
 
@@ -280,6 +359,11 @@ void MYWORD::closeAllWord()
 void MYWORD::process_start()
 {
     CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    sem = new QSemaphore;
+    is_waiting = false;
+    is_closeFind = false;
+
+
 }
 
 void MYWORD::setTemp(QString R)
